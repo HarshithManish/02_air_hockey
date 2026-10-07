@@ -1,6 +1,6 @@
 """
-GameEngine: owns the puck, both paddles, the computer AI, score,
-and match timer.
+GameEngine: owns the puck, both paddles, computer AI, score,
+and the 30-second match timer.
 """
 
 import random
@@ -17,23 +17,20 @@ PUCK_RADIUS = 12
 PADDLE_RADIUS = 28
 INITIAL_PUCK_SPEED = 4.5
 
-MATCH_DURATION = 30  # seconds
+MATCH_DURATION = 30
 
 
 class GameEngine:
     def __init__(self):
         self.puck = Puck(WIDTH / 2, HEIGHT / 2, PUCK_RADIUS)
 
-        # Score
         self.player_score = 0
         self.computer_score = 0
 
-        # Timer
         self.match_duration = MATCH_DURATION
         self.start_time = pygame.time.get_ticks()
         self.time_remaining = MATCH_DURATION
 
-        # Game state
         self.game_over = False
         self.result = ""
 
@@ -70,11 +67,11 @@ class GameEngine:
         self.puck.vy = INITIAL_PUCK_SPEED * vy_factor
 
     def handle_input(self, keys_pressed):
-        # Do not allow movement after the match has ended.
         if self.game_over:
             return
 
-        dx = dy = 0
+        dx = 0
+        dy = 0
 
         if keys_pressed[pygame.K_UP]:
             dy -= PLAYER_SPEED
@@ -88,19 +85,18 @@ class GameEngine:
         self.player.move_by(dx, dy)
 
     def update(self):
-        # Stop all game logic once the timer reaches zero.
         if self.game_over:
             return
 
-        # Calculate elapsed time in seconds.
-        elapsed_time = (pygame.time.get_ticks() - self.start_time) / 1000
+        elapsed_time = (
+            pygame.time.get_ticks() - self.start_time
+        ) / 1000
 
         self.time_remaining = max(
             0,
             self.match_duration - int(elapsed_time)
         )
 
-        # Check whether the match has ended.
         if self.time_remaining <= 0:
             self.time_remaining = 0
             self._end_match()
@@ -111,8 +107,15 @@ class GameEngine:
         self.puck.move()
         self.puck.bounce_off_walls(HEIGHT, MARGIN)
 
-        handle_paddle_collision(self.puck, self.player)
-        handle_paddle_collision(self.puck, self.computer)
+        handle_paddle_collision(
+            self.puck,
+            self.player
+        )
+
+        handle_paddle_collision(
+            self.puck,
+            self.computer
+        )
 
         self._handle_goals()
 
@@ -144,11 +147,9 @@ class GameEngine:
     def _end_match(self):
         self.game_over = True
 
-        # Stop the puck.
         self.puck.vx = 0
         self.puck.vy = 0
 
-        # Decide the winner.
         if self.player_score > self.computer_score:
             self.result = "PLAYER WINS"
         elif self.computer_score > self.player_score:
@@ -175,7 +176,6 @@ class GameEngine:
 
         renderer.draw_puck(surface, self.puck)
 
-        # Draw score and timer.
         renderer.draw_score(
             surface,
             font,
@@ -189,7 +189,6 @@ class GameEngine:
             self.time_remaining
         )
 
-        # Draw final result.
         if self.game_over:
             renderer.draw_result(
                 surface,
